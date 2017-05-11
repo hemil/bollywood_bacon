@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Welcome Home {% endblock %}</title>
+</head>
+<body>
+  {% block pagecontent %}
+    <p>"aka Doing something."
+    </p>
+    <a href="{% url 'home' %}">Go Home</a>
+    <a href="{% url 'about' %}">About This Site</a>
+    <br>
+    Connection Between:
+    <br>
+    <form action="/v1/shortest-path/" method="get" target="_blank">
+      Name One: <input type="text" name="name_one"><br>
+      Name Two: <input type="text" name="name_two"><br>
+      <input type="submit" value="Excelsior!">
+    </form>
+
+    <br>
+    <br>
+    <br>
+    Get their CoActors:
+    <br>
+    <form action="/v1/degree-centrality/" method="get" target="_blank">
+      Name One: <input type="text" name="name_one"><br>
+      <input type="submit" value="Excelsior!">
+    </form>
+
+
+    <br>
+    <br>
+    <br>
+    Get Actors of a Movie:
+    <br>
+    <form action="/v1/movie/actors/" method="get" target="_blank">
+      Name One: <input type="text" name="name_one"><br>
+      <input type="submit" value="Excelsior!">
+    </form>
+  {% endblock %}
+</body>
+</html>
