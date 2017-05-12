@@ -38,7 +38,7 @@ def chunks(l, n):
 
 
 def accio_gomolo_data():
-    graph = GraphDatabase("http://localhost:7474/db/data/", username="neo4j", password="1123581321")
+    graph = GraphDatabase("http://localhost:7474/db/data/", username="neo4j", password="root")
     actors_label = graph.labels.create("Actor")
     movies_label = graph.labels.create("Movie")
     # node_selector = NodeSelector(graph)
@@ -62,7 +62,7 @@ def accio_gomolo_data():
         for row in table.findAll("tr"):
             rows.append(row)
         replacements = (u'\t', ''), (u'\n', ''), (u'[u\'', ''), (u'\\xa0\\xa0\']', ''), (' and others', ''), (
-            u'[u\"', ''), (u'\\xa0\\xa0\""]', '')
+            u'[u\"', ''), (u'\\xa0\\xa0\""]', ''), ('.', ',')
 
         for each_movie_html in rows[1:]:
             try:
@@ -78,13 +78,16 @@ def accio_gomolo_data():
 
                 movie_title = BeautifulSoup(str(movie_html[0]), "html.parser")
                 title = movie_title.find('td').find('a')['title']
-                title = unicode(title).encode("utf-8").strip().capitalize()
+                title = unicode(title).encode("utf-8").strip().title()
+                if not re.match("^[a-zA-Z0-9 ]*$", title):
+                    print "Missing movie: {title}".format(title=title)
+                    continue
                 movie_lookup = Q("name", iexact=title)
                 movie_nodes = movies_label.filter(movie_lookup)
                 if len(movie_nodes) > 0:
                     movie_node = movie_nodes[0]
                 else:
-                    movie_node = movies_label.create(name=unicode(title).encode("utf-8").strip().capitalize())
+                    movie_node = movies_label.create(name=unicode(title).encode("utf-8").strip().title())
 
                 # You have the Movie Node. Get or Create
                 movie_cast = BeautifulSoup(str(movie_html[3]), "html.parser")
@@ -92,7 +95,10 @@ def accio_gomolo_data():
                                                  *replacements)  # Cleanup internet shit
                 actors = actors_string.split(", ")
                 for actor in actors:
-                    actor = unicode(actor).encode("utf-8").strip().capitalize()
+                    actor = unicode(actor).encode("utf-8").strip().title()
+                    if not re.match("^[a-zA-Z0-9 ]*$", actor):
+                        print "Missing movie: {title} and actor: {actor}".format(title=title, actor=actor)
+                        continue
                     actor_lookup = Q("name", iexact=actor)
                     actor_nodes = actors_label.filter(actor_lookup)
                     if len(actor_nodes) > 0:

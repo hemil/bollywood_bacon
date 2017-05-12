@@ -1,3 +1,4 @@
+import re
 from neo4jrestclient.client import GraphDatabase
 from neo4jrestclient.query import Q
 from bs4 import BeautifulSoup
@@ -5,7 +6,7 @@ import mechanize
 
 
 def accio_wiki_data():
-    graph = GraphDatabase("http://localhost:7474/db/data/", username="neo4j", password="1123581321")
+    graph = GraphDatabase("http://localhost:7474/db/data/", username="neo4j", password="root")
     actors_label = graph.labels.create("Actor")
     movies_label = graph.labels.create("Movie")
     base_url = "https://en.wikipedia.org/wiki/List_of_Bollywood_films_of_{year}"
@@ -35,7 +36,10 @@ def accio_wiki_data():
                     if not movie:
                         continue
                     title = movie.contents[0]
-                    title = unicode(title).encode("utf-8").strip().capitalize()
+                    title = unicode(title).encode("utf-8").strip().title()
+                    if not re.match("^[a-zA-Z0-9 ]*$", title):
+                        print "Missing movie: {title}".format(title=title)
+                        continue
                     movie_lookup = Q("name", iexact=title)
                     movie_nodes = movies_label.filter(movie_lookup)
                     if len(movie_nodes) > 0:
@@ -51,7 +55,10 @@ def accio_wiki_data():
                         if "does not exist" not in unicode(actor_link["title"]).encode("utf-8"):
                             # if wiki page exists
                             actor = actor_link.contents[0]
-                            actor = unicode(actor).encode("utf-8").strip().capitalize()
+                            actor = unicode(actor).encode("utf-8").strip().title()
+                            if not re.match("^[a-zA-Z0-9 ]*$", actor):
+                                print "Missing movie: {title} and actor: {actor}".format(title=title, actor=actor)
+                                continue
                             actor_lookup = Q("name", iexact=actor)
                             actor_nodes = actors_label.filter(actor_lookup)
                             if len(actor_nodes) > 0:
@@ -114,7 +121,7 @@ def accio_wiki_data_format_2():
                         continue
 
                     title = movie.contents[0]
-                    title = unicode(title).encode("utf-8").strip().capitalize()
+                    title = unicode(title).encode("utf-8").strip().title()
                     movie_lookup = Q("name", iexact=title)
                     movie_nodes = movies_label.filter(movie_lookup)
                     if len(movie_nodes) > 0:
@@ -129,7 +136,7 @@ def accio_wiki_data_format_2():
                         if "does not exist" not in unicode(actor_link.get("title", "does not exist")).encode("utf-8"):
                             # if wiki page exists
                             actor = actor_link.contents[0]
-                            actor = unicode(actor).encode("utf-8").strip().capitalize()
+                            actor = unicode(actor).encode("utf-8").strip().title()
                             actor_lookup = Q("name", iexact=actor)
                             actor_nodes = actors_label.filter(actor_lookup)
                             if len(actor_nodes) > 0:

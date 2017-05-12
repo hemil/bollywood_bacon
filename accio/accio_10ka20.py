@@ -19,11 +19,11 @@ def multiple_replace(string, *key_values):
 
 replacements = (u'\t', ''), (u'\n', ''), (u'[u\'', ''), (u'\\xa0\\xa0\']', ''), (' and others', ''), (
             u'[u\"', ''), (u'\\xa0\\xa0\""]', ''), (u'\r\n', ''), (u'<br>', ''), (u'Produced By:*', ''), \
-               (u'Directed By:*', ''), (u'-', ''), (u'"', ''), (u'`', '')
+               (u'Directed By:*', ''), (u'-', ''), (u'"', ''), (u'`', ''), ('.', ',')
 
 
 def accio_10ka20_data():
-    graph = GraphDatabase("http://localhost:7474/db/data/", username="neo4j", password="1123581321")
+    graph = GraphDatabase("http://localhost:7474/db/data/", username="neo4j", password="root")
     actors_label = graph.labels.create("Actor")
     movies_label = graph.labels.create("Movie")
     source_url = "http://www.10ka20.com/"
@@ -55,7 +55,10 @@ def accio_10ka20_data():
                 movie_cast = str(rows[2].findAll("td")[-1])[4:-5].strip()       # as per html structure
                 # movie_cast = movie_cast.replace(".", ",")
                 title = re.sub("[\(\[].*?[\)\]]", "", movie.contents[0])
-                title = unicode(title).encode("utf-8").strip().capitalize()
+                title = unicode(title).encode("utf-8").strip().title()
+                if not re.match("^[a-zA-Z0-9 ]*$", title):
+                    print "Missing movie: {title}".format(title=title)
+                    continue
                 movie_lookup = Q("name", iexact=title)
                 movie_nodes = movies_label.filter(movie_lookup)
                 if len(movie_nodes) > 0:
@@ -64,12 +67,15 @@ def accio_10ka20_data():
                     movie_node = movies_label.create(name=title)
 
                 # You have the Movie Node. Get or Create
-                actors = movie_cast.split(",")
+                actors = movie_cast.replace().split(",")
                 for actor in actors:
                     actor = actor.strip()
                     actor = multiple_replace(actor, *replacements)
                     if actor:
-                        actor = unicode(actor).encode("utf-8").strip().capitalize()
+                        actor = unicode(actor).encode("utf-8").strip().title()
+                        if not re.match("^[a-zA-Z0-9 ]*$", actor):
+                            print "Missing movie: {title} and actor: {actor}".format(title=title, actor=actor)
+                            continue
                         actor_lookup = Q("name", iexact=actor)
                         actor_nodes = actors_label.filter(actor_lookup)
                         if len(actor_nodes) > 0:
@@ -78,7 +84,7 @@ def accio_10ka20_data():
                             actor_node = actors_label.create(name=actor)
 
                         actor_node.Acted_In(movie_node)
-                        print "Movie: {title} Actor: {actor}".format(title=title, actor=actor)
+                        # print "Movie: {title} Actor: {actor}".format(title=title, actor=actor)
             except Exception:
                 continue
 

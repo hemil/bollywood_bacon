@@ -21,9 +21,9 @@ def multiple_replace(string, *key_values):
 
 replacements = (u'\t', ''), (u'\n', ''), (u'[u\'', ''), (u'\\xa0\\xa0\']', ''), (' and others', ''), (
             u'[u\"', ''), (u'\\xa0\\xa0\""]', ''), (u'\r\n', ''), (u'<br>', ''), (u'Produced By:*', ''), \
-               (u'Directed By:*', '')
+               (u'Directed By:*', ''), ('.', ',')
 
-graph = GraphDatabase("http://localhost:7474/db/data/", username="neo4j", password="1123581321")
+graph = GraphDatabase("http://localhost:7474/db/data/", username="neo4j", password="root")
 actors_label = graph.labels.create("Actor")
 movies_label = graph.labels.create("Movie")
 
@@ -60,7 +60,10 @@ for collection_link in collection_links[2:]:
             pass
 
         title = movie_html.get_text()[:-6]
-        title = unicode(title).encode("utf-8").strip().capitalize()
+        title = unicode(title).encode("utf-8").strip().title()
+        if not re.match("^[a-zA-Z0-9 ]*$", title):
+            print "Missing movie: {title}".format(title=title)
+            continue
         movie_lookup = Q("name", iexact=title)
         movie_nodes = movies_label.filter(movie_lookup)
         try:
@@ -82,12 +85,11 @@ for collection_link in collection_links[2:]:
             pass
         for actor_source in actors:
             try:
-                # if "br" in actor_source:
-                #     print repr(actor_source)
-                #     actor_source = actor_source.split("<br>\r\n")[1]
-                #     print actor_source
                 actor = multiple_replace(actor_source, *replacements)
-                actor = unicode(actor).encode("utf-8").strip().capitalize()
+                actor = unicode(actor).encode("utf-8").strip().title()
+                if not re.match("^[a-zA-Z0-9 ]*$", actor):
+                    print "Missing movie: {title} and actor: {actor}".format(title=title, actor=actor)
+                    continue
                 actor_lookup = Q("name", iexact=actor)
                 actor_nodes = actors_label.filter(actor_lookup)
                 if len(actor_nodes) > 0:
