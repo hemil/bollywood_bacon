@@ -1,4 +1,4 @@
-from neo4jrestclient.client import GraphDatabase
+from neo4jrestclient.client import GraphDatabase, Node
 from neo4jrestclient.query import Q
 from bs4 import BeautifulSoup
 import re
