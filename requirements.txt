@@ -7,3 +7,4 @@ decorator==4.0.11
 mechanize==0.2.5
 neo4jrestclient==2.1.1
 requests==2.13.0
+gunicorn==19.7.1
