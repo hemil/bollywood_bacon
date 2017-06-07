@@ -4,14 +4,13 @@ from neo4jrestclient.client import GraphDatabase, Node, Relationship
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.conf import settings
-
+from urlparse import urlparse, urlunparse
 
 @csrf_exempt
 @api_view(["GET"])
 def shortest_path(request):
     name_one = request.GET.get("name_one")
     name_two = request.GET.get("name_two")
-    print name_one, name_two
     if name_one is None and name_two is None:
         response_json = json.dumps({
             'status': 1,
@@ -20,7 +19,11 @@ def shortest_path(request):
             'count': 0
         })
         return HttpResponse(response_json, content_type="application/json", status=400)
-    graph = GraphDatabase("http://localhost:7474/db/data/", username="neo4j", password="1123581321")
+    url = urlparse(settings.GRAPHENEDB_URL)
+    url_without_auth = urlunparse((url.scheme, "{0}:{1}".format(url.hostname, url.port), url.path, None, None, None))
+
+    graph = GraphDatabase(url_without_auth, username = url.username, password = url.password)
+    # graph = GraphDatabase("http://localhost:7474/db/data/", username="neo4j", password="1123581321")
     q = """
         MATCH p=shortestPath((bacon:Actor {{name:"{name_one}"}})-[*]-(meg:Actor {{name:"{name_two}"}}))
         RETURN p
@@ -33,7 +36,7 @@ def shortest_path(request):
             'count': 0
         })
     # Hardcoding For Frontend dev
-    response_json = json.dumps({"status": 1, "instance_name": "local", "data": {"relationships": [{"endNode": "686", "startNode": "696", "type": "Acted_In", "id": "100848", "properties": {}}, {"endNode": "4888", "startNode": "2249", "type": "Acted_In", "id": "9843", "properties": {}}, {"endNode": "4888", "startNode": "696", "type": "Acted_In", "id": "9844", "properties": {}}, {"endNode": "686", "startNode": "690", "type": "Acted_In", "id": "873", "properties": {}}], "nodes": [{"labels": ["Actor"], "id": "690", "properties": {"name": "Aishwarya Rai"}}, {"labels": ["Actor"], "id": "696", "properties": {"name": "Satish Kaushik"}}, {"labels": ["Movie"], "id": "4888", "properties": {"name": "Road, Movie"}}, {"labels": ["Actor"], "id": "2249", "properties": {"name": "Abhay Deol"}}, {"labels": ["Movie"], "id": "686", "properties": {"name": "Aa Ab Laut Chalen"}}]}, "count": 0})
+    # response_json = json.dumps({"status": 1, "instance_name": "local", "data": {"relationships": [{"endNode": "686", "startNode": "696", "type": "Acted_In", "id": "100848", "properties": {}}, {"endNode": "4888", "startNode": "2249", "type": "Acted_In", "id": "9843", "properties": {}}, {"endNode": "4888", "startNode": "696", "type": "Acted_In", "id": "9844", "properties": {}}, {"endNode": "686", "startNode": "690", "type": "Acted_In", "id": "873", "properties": {}}], "nodes": [{"labels": ["Actor"], "id": "690", "properties": {"name": "Aishwarya Rai"}}, {"labels": ["Actor"], "id": "696", "properties": {"name": "Satish Kaushik"}}, {"labels": ["Movie"], "id": "4888", "properties": {"name": "Road, Movie"}}, {"labels": ["Actor"], "id": "2249", "properties": {"name": "Abhay Deol"}}, {"labels": ["Movie"], "id": "686", "properties": {"name": "Aa Ab Laut Chalen"}}]}, "count": 0})
     return HttpResponse(response_json, content_type="application/json")
 
 

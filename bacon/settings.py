@@ -72,6 +72,7 @@ DATABASES = {
     }
 }
 
+GRAPHENEDB_URL = "http://app70156379-vtQNlo:b.3sEjlGDnYJWO.BfsWAxIMAW0mN0B2@hobby-jgpeknaijildgbkepljcnjpl.dbs.graphenedb.com:24789"
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
