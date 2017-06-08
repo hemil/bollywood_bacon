@@ -72,9 +72,9 @@ DATABASES = {
     }
 }
 
-NEO4J_URL = "http://34.211.186.19:7474/db/data/"
-NEO4J_USER_NAME = "neo4j"
-NEO4J_PASSWORD = "1123581321"
+NEO4J_URL = ""
+NEO4J_USER_NAME = ""
+NEO4J_PASSWORD = ""
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
