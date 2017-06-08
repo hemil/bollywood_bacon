@@ -1,27 +1,10 @@
 '''
 from a guy. 1931 to 1999 movies
 '''
-import re
-
 from bs4 import BeautifulSoup, SoupStrainer
 import mechanize
 from neo4jrestclient.client import GraphDatabase
-from neo4jrestclient.query import Q
-
-
-def multiple_replacer(*key_values):
-    replace_dict = dict(key_values)
-    replacement_function = lambda match: replace_dict[match.group(0)]
-    pattern = re.compile("|".join([re.escape(k) for k, v in key_values]), re.M)
-    return lambda string: pattern.sub(replacement_function, string)
-
-
-def multiple_replace(string, *key_values):
-    return multiple_replacer(*key_values)(string)
-
-replacements = (u'\t', ''), (u'\n', ''), (u'[u\'', ''), (u'\\xa0\\xa0\']', ''), (' and others', ''), (
-            u'[u\"', ''), (u'\\xa0\\xa0\""]', ''), (u'\r\n', ''), (u'<br>', ''), (u'Produced By:*', ''), \
-               (u'Directed By:*', '')
+from common import create_movie_entities
 
 graph = GraphDatabase("http://localhost:7474/db/data/", username="neo4j", password="1123581321")
 actors_label = graph.labels.create("Actor")
@@ -33,7 +16,6 @@ browser.open(root)
 collection_links = []
 movies = []
 soup = BeautifulSoup(browser.response(), "html.parser", parse_only=SoupStrainer('a'))
-# x = PrettyTable(['link'])
 
 for link in soup:
     if link.has_attr('href'):
@@ -44,7 +26,7 @@ del collection_links[-1]
 links list has all the links which contains the movies.
 '''
 
-for collection_link in collection_links[2:]:
+for collection_link in collection_links[20:]:
     print "Search URL: {url}".format(url=collection_link)
     browser.open(collection_link)
     soup = BeautifulSoup(browser.response(), "html.parser")
@@ -57,45 +39,19 @@ for collection_link in collection_links[2:]:
             movie_info = movie_info_soup.find_all('p')[0].contents
         except Exception as e:
             print type(e)
-            pass
+            continue
 
         title = movie_html.get_text()[:-6]
         title = unicode(title).encode("utf-8").strip().capitalize()
-        movie_lookup = Q("name", iexact=title)
-        movie_nodes = movies_label.filter(movie_lookup)
-        try:
-            if len(movie_nodes) > 0:
-                movie_node = movie_nodes[0]
-            else:
-                movie_node = movies_label.create(name=title)
 
+        try:
             actors_one = unicode(movie_info[1]).encode("utf-8")
+            actors_two = unicode(movie_info[2]).encode("utf-8").split("<br>")[1].strip()
             actors = actors_one.split(",")
+            actors.extend(actors_two.split(","))
         except Exception:
+            pass
+        if not actors:
             continue
 
-        try:
-            actors_two = unicode(movie_info[2]).encode("utf-8").split("<br>")[1].strip()
-            actors.extend(actors_two.split(","))
-        except IndexError:
-            "Only one line of actors"
-            pass
-        for actor_source in actors:
-            try:
-                # if "br" in actor_source:
-                #     print repr(actor_source)
-                #     actor_source = actor_source.split("<br>\r\n")[1]
-                #     print actor_source
-                actor = multiple_replace(actor_source, *replacements)
-                actor = unicode(actor).encode("utf-8").strip().capitalize()
-                actor_lookup = Q("name", iexact=actor)
-                actor_nodes = actors_label.filter(actor_lookup)
-                if len(actor_nodes) > 0:
-                    actor_node = actor_nodes[0]
-                else:
-                    actor_node = actors_label.create(name=actor)
-
-                actor_node.Acted_In(movie_node)
-                print "Movie: {title} Actor: {actor}".format(title=title, actor=actor)
-            except Exception:
-                continue
+        create_movie_entities(movies_label, actors_label, title, actors)

@@ -1,25 +1,10 @@
 from neo4jrestclient.client import GraphDatabase
-from neo4jrestclient.query import Q
 from string import ascii_uppercase
 from bs4 import BeautifulSoup
 import mechanize
 import re
 import requests
-
-
-def multiple_replacer(*key_values):
-    replace_dict = dict(key_values)
-    replacement_function = lambda match: replace_dict[match.group(0)]
-    pattern = re.compile("|".join([re.escape(k) for k, v in key_values]), re.M)
-    return lambda string: pattern.sub(replacement_function, string)
-
-
-def multiple_replace(string, *key_values):
-    return multiple_replacer(*key_values)(string)
-
-replacements = (u'\t', ''), (u'\n', ''), (u'[u\'', ''), (u'\\xa0\\xa0\']', ''), (' and others', ''), (
-            u'[u\"', ''), (u'\\xa0\\xa0\""]', ''), (u'\r\n', ''), (u'<br>', ''), (u'Produced By:*', ''), \
-               (u'Directed By:*', ''), (u'-', ''), (u'"', ''), (u'`', '')
+from common import create_movie_entities
 
 
 def accio_10ka20_data():
@@ -53,32 +38,10 @@ def accio_10ka20_data():
                 movie_info = tables[-1]
                 rows = movie_info.findAll("tr")
                 movie_cast = str(rows[2].findAll("td")[-1])[4:-5].strip()       # as per html structure
-                # movie_cast = movie_cast.replace(".", ",")
+                actors = movie_cast.split(",")
                 title = re.sub("[\(\[].*?[\)\]]", "", movie.contents[0])
                 title = unicode(title).encode("utf-8").strip().capitalize()
-                movie_lookup = Q("name", iexact=title)
-                movie_nodes = movies_label.filter(movie_lookup)
-                if len(movie_nodes) > 0:
-                    movie_node = movie_nodes[0]
-                else:
-                    movie_node = movies_label.create(name=title)
-
-                # You have the Movie Node. Get or Create
-                actors = movie_cast.split(",")
-                for actor in actors:
-                    actor = actor.strip()
-                    actor = multiple_replace(actor, *replacements)
-                    if actor:
-                        actor = unicode(actor).encode("utf-8").strip().capitalize()
-                        actor_lookup = Q("name", iexact=actor)
-                        actor_nodes = actors_label.filter(actor_lookup)
-                        if len(actor_nodes) > 0:
-                            actor_node = actor_nodes[0]
-                        else:
-                            actor_node = actors_label.create(name=actor)
-
-                        actor_node.Acted_In(movie_node)
-                        print "Movie: {title} Actor: {actor}".format(title=title, actor=actor)
+                create_movie_entities(movies_label, actors_label, title, actors)
             except Exception:
                 continue
 

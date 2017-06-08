@@ -72,7 +72,9 @@ DATABASES = {
     }
 }
 
-GRAPHENEDB_URL = "http://app70156379-vtQNlo:b.3sEjlGDnYJWO.BfsWAxIMAW0mN0B2@hobby-jgpeknaijildgbkepljcnjpl.dbs.graphenedb.com:24789"
+NEO4J_URL = "http://34.211.186.19:7474/db/data/"
+NEO4J_USER_NAME = "neo4j"
+NEO4J_PASSWORD = "1123581321"
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
