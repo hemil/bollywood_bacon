@@ -1,5 +1,79 @@
-.container {
-    background: white;
-    margin: 10 10 10 10;
-    border: 3px solid black;
+@font-face {
+  font-family: CircularStd-Book;
+  src:url(../../../static/assets/fonts/CircularStd-Book.otf);
+}
+
+html {
+  position: relative;
+  min-width: 320px;
+  font-size: 62.5%;  // 10px --other units relative to this in rem 1.4rem =14px
+}
+
+body{
+	margin-top: 3rem;
+}
+
+.container{
+	height: 100%;
+	border: solid 2px #e4e4e4;
+	border-radius:4px;
+	padding: 3rem;
+}
+
+.removeMargin{
+	margin: 0px !important;
+}
+
+.mainTitleDiv{
+	padding: 1.5rem;
+	text-align: center;
+	font-size: 2.4rem;
+	font-family: CircularStd-Book;
+	border: solid 1px #fee799;
+	border-radius: 15px;
+	background-color: #fee799;
+}
+
+.mt-20{
+	margin-top: 2rem !important;
+}
+
+.data-container{
+	border: 1px solid #ddd;
+	border-bottom-left-radius: 10px;
+	border-bottom-right-radius: 10px;
+	padding: 15px;
+	border-top:none;
+}
+
+.inputBox{
+	border: 2px solid #eee;
+	border-radius: 10px;
+	padding: 15px;
+	margin-bottom: 20px;
+	height: 100%;
+}
+
+.inputBoxTitle{
+	text-align: center;
+	font-size: 1.8rem;
+}
+
+.flexBox{
+	width: 100%;
+	display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+	display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+	display: -ms-flexbox;      /* TWEENER - IE 10 */
+	display: -webkit-flex;     /* NEW - Chrome */
+	display: flex;
+	-webkit-display: -webkit-box;
+	-webkit-display: -webkit-flex;
+	-webkit-align-items: stretch;
+	-webkit-box-align: stretch;
+	-ms-flex-align: stretch;
+	align-items: stretch;
+}
+
+.flex-item{
+  flex:1 1 ;
 }
