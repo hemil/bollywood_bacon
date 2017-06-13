@@ -13,6 +13,17 @@ body{
 	margin-top: 3rem;
 }
 
+.node {
+    fill: #ccc;
+    stroke: #fff;
+    stroke-width: 2px;
+}
+
+.link {
+    stroke: #777;
+    stroke-width: 2px;
+}
+
 .container{
 	height: 100%;
 	border: solid 2px #e4e4e4;
@@ -42,7 +53,7 @@ body{
 	border: 1px solid #ddd;
 	border-bottom-left-radius: 10px;
 	border-bottom-right-radius: 10px;
-	padding: 15px;
+	padding: 15px; 
 	border-top:none;
 }
 

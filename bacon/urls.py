@@ -6,8 +6,8 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     url(r'^$', base_view.HomePageView.as_view(), name='home'),
-    url(r'^about/$', base_view.AboutPageView.as_view(), name='about'),
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^about/?$', base_view.AboutPageView.as_view(), name='about'),
+    url(r'^admin/?', include(admin.site.urls)),
     url(r'^v1/ping/?$', base_view.ping),
     url(r'^v1/shortest-path/?$', network_metrics.shortest_path, name='shortest-path'),
     url(r'^v1/degree-centrality/?$', network_metrics.degree_centrality, name='degree-centrality'),

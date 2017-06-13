@@ -5,8 +5,23 @@
 <head>
   <meta charset="UTF-8">
   <title>{% block title %}Welcome Home {% endblock %}</title>
-</head>
+   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js"></script>
+  <style>
 
+.node {
+    fill: #ccc;
+    stroke: #fff;
+    stroke-width: 2px;
+}
+
+.link {
+    stroke: #777;
+    stroke-width: 2px;
+}
+
+    </style>
+</head>
 <body>
 
 {% block pagecontent %}
@@ -25,18 +40,18 @@
 
 <div class="data-container flexBox row removeMargin">
   <div class="col-sm-4 flex-item">
-     <div class="inputBox">
+     <div class="inputBox">{{showGraph}}
       <div class="inputBoxTitle">Get the connection between :</div>
-      <form action="/v1/shortest-path/" method="get" target="_blank">
-        <div class="form-group">
+      <form>
+        <div class="form-group actor_field">
           <label>Actor one : </label>
-          <input class="form-control" type="text" name="name_one">
+          <input id='actor_one' class="form-control" type="text" name="name_one">
         </div>
-        <div class="form-group">
+        <div class="form-group actor_field">
           <label>Actor two : </label>
-          <input class="form-control" type="text" name="name_two">
+          <input id='actor_two' class="form-control" type="text" name="name_two">
         </div>
-        <input type="submit" class="btn btn-primary" value="Excelsior!">
+        <input id='shrtPath' type="button" class="btn btn-primary" value="Excelsior!">
       </form>
     </div>
   </div>
@@ -47,7 +62,7 @@
       <form action="/v1/degree-centrality/" method="get" target="_blank">
         <div class="form-group">
           <label>Actor name : </label>
-          <input class="form-control" type="text" name="name_one">
+          <input id='actor_name' class="form-control" type="text" name="name_one">
         </div>
           <input type="submit" class="btn btn-primary" value="Excelsior!">
       </form>
@@ -60,13 +75,161 @@
       <form action="/v1/movie/actors/" method="get" target="_blank">
         <div class="form-group">
           <label>Movie name : </label>
-          <input class="form-control" type="text" name="name_one">
+          <input id='movie_name' class="form-control" type="text" name="name_one">
         </div>
         <input type="submit" class="btn btn-primary" value="Excelsior!">
       </form>
     </div>
     </div>
+
 </div>
+<div id='loaderDiv' class='row removeMargin displayNone loaderContainer' >
+<div class="loader" ></div>
+</div>
+<script type="text/javascript" defer='defer'>
+
+  $(document).ready(function() {
+      checkForEmptyValueForShortestPath();
+      $('.actor_field input').keyup(function() {
+        checkForEmptyValueForShortestPath();
+      });
+  });
+
+  function checkForEmptyValueForShortestPath(){
+        var empty = false;
+        $('.actor_field input').each(function() {
+            if ($(this).val().trim().length == 0) {
+                empty = true;
+            }
+        });
+        if (empty) {
+            $('#shrtPath').attr('disabled', 'disabled');
+        } else {
+            $('#shrtPath').removeAttr('disabled');
+        }
+  }
+
+  $('#shrtPath').click(function() {
+    d3.select("svg").remove();
+    $('#loaderDiv').removeClass('displayNone');
+    let actorOneName=$('#actor_one').val().trim();
+    let actorTwoName=$('#actor_two').val().trim();
+    $.ajax({
+        url: "/v1/shortest-path/",
+        type: "GET",
+        data: { //django needs this
+                 name_one: actorOneName,
+                  name_two: actorTwoName},
+        timeout:0,
+        success: function(data){//do something when done
+                          //data will be the string returned by HTTPResponse
+                          renderSvg(data);
+        }
+      });
+  });
+</script>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+
+  <script >
+
+  function renderSvg(dataJson){
+
+var width = 640,
+    height = 480;
+
+
+var svg = d3.select('.container').append('svg')
+    .attr('width', width)
+    .attr('height', height);
+
+var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+var simulation = d3.forceSimulation()
+    .force("link", d3.forceLink().id(function(d) { return d.id; }).distance(100))
+    .force("charge", d3.forceManyBody())
+    .force("center", d3.forceCenter(width / 2, height / 2));
+
+dataAppend(dataJson);
+
+  function dataAppend(graph) {
+  var link = svg.append("g")
+      .attr("class", "links")
+    .selectAll("line")
+    .data(graph.links)
+    .enter().append("line")
+      .attr("stroke-width", function(d) { return Math.sqrt(d.value); });
+
+  var node = svg.append("g")
+      .attr("class", "nodes")
+    .selectAll("circle")
+    .data(graph.nodes)
+    .enter().append("circle")
+      .attr("r", 10)
+      .attr("fill", function(d) { return color(d.group); })
+      .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended));
+
+  var texts = svg.selectAll("text.label")
+                .data(graph.nodes)
+                .enter().append("text")
+                .attr("class", "label")
+                .attr("fill", "black")
+                .text(function(d) {  return d.text;  });
+
+
+  node.append("title")
+      .text(function(d) { return d.text; });
+
+
+  simulation
+      .nodes(graph.nodes)
+      .on("tick", ticked);
+
+  simulation.force("link")
+      .links(graph.links);
+
+  function ticked() {
+    link
+        .attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+       node.attr("transform", function(d) { 
+        return 'translate(' + [d.x, d.y] + ')'; 
+    });
+
+       texts.attr("transform", function(d) {
+        return "translate(" + d.x + "," + d.y + ")";
+    });
+  }
+}
+
+function dragstarted(d) {
+  if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x;
+  d.fy = d.y;
+}
+
+function dragged(d) {
+  d.fx = d3.event.x;
+  d.fy = d3.event.y;
+}
+
+function dragended(d) {
+  if (!d3.event.active) simulation.alphaTarget(0);
+  d.fx = null;
+  d.fy = null;
+}
+
+  $('#loaderDiv').addClass('displayNone');
+
+}
+
+    </script>
+
 {% endblock %}
 </body>
 </html>
